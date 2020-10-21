@@ -467,7 +467,7 @@ function generateBid(offer) {
       offer.quantity = cakeBundle;
       let bundleUnitPrice = -1.0 * calculateUtilitySeller(utilityInfo, offer);
       console.log("BUNDLE UNIT PRICE IS: " + bundleUnitPrice);
-      bid.type = "SellOffer";
+      bid.type = "CakeBundleOffer";
       bid.quantity = cakeBundle;
       bid.price = {
         unit: utilityInfo.currencyUnit,
@@ -730,6 +730,15 @@ function translateBid(bid, confirm) {
   let text = "";
   if(bid.type == 'SellOffer') {
     text = "How about if I sell you";
+    Object.keys(bid.quantity).forEach(good => {
+      text += " " + bid.quantity[good] + " " + good;
+    });
+    text += " for " + bid.price.value + " " + bid.price.unit + ".";
+  }
+  else if (bid.type == "CakeBundleOffer"){
+    text = "Why not bundle that into ";
+    text += (bid.quantity['egg'] / 2) + " cakes."
+    text +=" In total I'll sell you"
     Object.keys(bid.quantity).forEach(good => {
       text += " " + bid.quantity[good] + " " + good;
     });
