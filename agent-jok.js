@@ -427,6 +427,9 @@ function generateBid(offer) {
 // Note that we are making no effort to upsell the buyer on a different package of goods than what they requested.
 // It would be legal to do so, and perhaps profitable in some situations -- consider doing that!
   let bid = {quantity: offer.quantity};
+  let pancakeBundle = {egg: 1, flour: 2, milk: 2};
+  let cakeBundle = {egg: 2, flour: 2, milk: 1, sugar: 1};
+  let wantedItems = Object.keys(offer.quantity);
 
   if(offer.price && offer.price.value) { // The buyer included a proposed price, which we must take into account
     let bundleCost = offer.price.value - utility;
@@ -452,6 +455,30 @@ function generateBid(offer) {
   }
   else { // The buyer didn't include a proposed price, leaving us free to consider how much to charge.
     // Set markup between 2 and 3 times the cost of the bundle and generate price accordingly.
+    let wantedAmount = 0;
+    if(wantedItems.length === 1){
+      wantedAmount =  offer.quantity[wantedItems[0]];
+    }
+    if(wantedAmount != 0 && wantedAmount % cakeBundle[wantedItems[0]] === 0){//bundle for a cake
+      let numCakes = wantedAmount / cakeBundle[wantedItems[0]];
+      for(let ingredient in cakeBundle){
+        cakeBundle[ingredient] *= numCakes;
+      }
+      offer.quantity = cakeBundle;
+      let bundleUnitPrice = -1.0 * calculateUtilitySeller(utilityInfo, offer);
+      console.log("BUNDLE UNIT PRICE IS: " + bundleUnitPrice);
+      bid.type = "SellOffer";
+      bid.quantity = cakeBundle;
+      bid.price = {
+        unit: utilityInfo.currencyUnit,
+        value: quantize(1.5 * bundleUnitPrice, 2)
+      };
+      console.log("RETURNING USER GENED BUNDLE BID");
+      console.log(bid);
+      return bid;
+    }else{//bundle for a pancake
+
+    }
     let markupRatio = 2.0 + Math.random();
     let bundleCost = -1.0 * utility; // Utility is -1 * bundle cost since price is interpreted as 0
     bid.type = 'SellOffer';
