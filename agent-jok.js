@@ -36,57 +36,65 @@ const rejectionMessages = [
   "Forget it. That's not a serious offer.",
   "Sorry. You're going to have to do a lot better than that!"
 ];
-
+​
 const acceptanceMessages = [
   "You've got a deal! I'll sell you",
   "You've got it! I'll let you have",
   "I accept your offer. Just to confirm, I'll give you"
 ];
-
+​
 const confirmAcceptanceMessages = [
   "I confirm that I'm selling you ",
   "I'm so glad! This is to confirm that I'll give you ",
   "Perfect! Just to confirm, I'm giving you "
 ];
-
+​
 const multiMessages = [
   "The quality of my produce is the best in town. You will not be disappointed.",
-  "All of my goods are from local farms. I can guarantee their quality and freshness."
+  "All of my goods are from local farms. I can guarantee their quality and freshness.",
+  "This bundle is the best deal you can get in town guaranteed!"
 ];
-
+​
 const eggMessages = [
   "All my eggs come from farm raised chickens, so I can guarantee their quality.",
-  "I had these eggs delivered to me this morning, so I can guarantee their freshness."
+  "I had these eggs delivered to me this morning, so I can guarantee their freshness.",
+  "The eggs I sell are award winning eggs. They're the best in the state!"
 ];
-
+​
 const flourMessages = [
   "My flour is top notch. You will not be disappointed!",
-  "Only the best of my flour is sold at these times."
+  "Only the best of my flour is sold at these times.",
+  "The flour is fresh from the local mill!"
 ];
-
+​
 const milkMessages = [
   "The milk I sell comes from a local farm and is delivered to me daily.",
-  "I drink it everyday!"
+  "I drink it everyday!",
+  "I use it to make all of my pasteries!"
 ];
-
+​
 const sugarMessages = [
   "The sugar I sell is completely organic and made from sugar cane.",
-  "I can guarantee that my sugar is the best in town."
+  "I can guarantee that my sugar is the best in town.",
+  "My sugar is perfect for cakes and pancakes!"
 ];
-
+​
 const chocolateMessages = [
   "The chocolate is made by my daughter, so you can know for sure that its top quality.",
-  "My wife loves this chocolate, so I buy it for her every year."
+  "My wife loves this chocolate, so I buy it for her every year.",
+  "The chocolate is especailly good for making pasteries!"
 ];
-
+​
 const vanillaMessages = [
   "This vanilla is usually very expensive, but I'm giving it to you for half price.",
-  "This vanilla is very strong and fresh."
+  "This vanilla is very strong and fresh.",
+  "Many local chefs prefer it over the ones found in stores."
 ];
-
+​
 const blueberryMessages = [
   "The blueberrys are fresh from my own garden. I can guarantee that they are fresh.",
-  "Blueberrys are in season right now, and they go perfectly with pancakes."
+  "Blueberrys are in season right now, and they go perfectly with pancakes.",
+  "My blueberries have won multiple awards throughout the years. This batch won't disappoint!"
 ];
 
 let negotiationState = {
