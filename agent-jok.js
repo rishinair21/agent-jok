@@ -437,10 +437,96 @@ function calculateUtilitySeller(utilityInfo, bundle) {
 }
 
 
-// *** generateBid()
-// Given a received offer and some very recent prior bidding history, generate a bid
-// including the type (Accept, Reject, and the terms (bundle and price).
+function generateHaggleBid(offer) {
+  console.log("In haggleBid, offer is: ", 2);
+  console.log(offer, 2);
+  console.log("bid history is currently: ", 3);
+  console.log(bidHistory, 3);
+  let minDicker = 0.10;
+  let buyerName = offer.metadata.speaker;
+  let myRecentOffers = bidHistory[buyerName].filter(bidBlock => {
+    return (bidBlock.type == "SellOffer");
+  });
+  console.log("myRecentOffers is: ", 2);
+  console.log(myRecentOffers, 2);
+  let myLastPrice = null;
+  if(myRecentOffers.length) {
+    myLastPrice = myRecentOffers[myRecentOffers.length-1].price.value;
+    console.log("My most recent price offer was " + myLastPrice, 2);
+  }
+  let timeRemaining = ((new Date(negotiationState.stopTime)).getTime() - (new Date()).getTime())/ 1000.0;
+  console.log("There are " + timeRemaining + " seconds remaining in this round.", 3);
 
+  let utility = calculateUtilitySeller(utilityInfo, offer);
+  console.log("From calculateUtilitySeller, utility of offer is computed to be: " + utility, 2);
+
+// Note that we are making no effort to upsell the buyer on a different package of goods than what they requested.
+// It would be legal to do so, and perhaps profitable in some situations -- consider doing that!
+  let bid = {quantity: offer.quantity};
+  let pancakeBundle = {egg: 1, flour: 2, milk: 2};
+  let cakeBundle = {egg: 2, flour: 2, milk: 1, sugar: 1};
+  let wantedItems = Object.keys(offer.quantity);
+
+  if(offer.price && offer.price.value) { // The buyer included a proposed price, which we must take into account
+    let bundleCost = offer.price.value - utility;
+
+    let markupRatio = utility / bundleCost;
+
+    if (markupRatio < -0.5) { // If buyer's offer is substantially below our cost, reject their offer
+      bid.type = 'Reject';
+      bid.price = null;
+    }
+    else { // If buyer's offer is in a range where an agreement seems possible, generate a counteroffer
+      bid.type = 'SellOffer';
+      bid.price = generateSellPrice(bundleCost, offer.price, myLastPrice, timeRemaining);
+      if(bid.price.value < offer.price.value + minDicker) {
+        bid.type = 'Accept';
+        bid.price = offer.price;
+      }
+      if(bid.price.value > offer.price.value + minDicker) {
+        bid.type = 'Reject';
+        bid.price = null;
+      }
+    }
+  }
+  else { // The buyer didn't include a proposed price, leaving us free to consider how much to charge.
+    // Set markup between 2 and 3 times the cost of the bundle and generate price accordingly.
+    let wantedAmount = 0;
+    if(wantedItems.length === 1){
+      wantedAmount =  offer.quantity[wantedItems[0]];
+    }
+    if(wantedAmount != 0 && wantedAmount % cakeBundle[wantedItems[0]] === 0){//bundle for a cake
+      let numCakes = wantedAmount / cakeBundle[wantedItems[0]];
+      for(let ingredient in cakeBundle){
+        cakeBundle[ingredient] *= numCakes;
+      }
+      offer.quantity = cakeBundle;
+      let bundleUnitPrice = -1.0 * calculateUtilitySeller(utilityInfo, offer);
+      console.log("BUNDLE UNIT PRICE IS: " + bundleUnitPrice);
+      bid.type = "CakeBundleOffer";
+      bid.quantity = cakeBundle;
+      bid.price = {
+        unit: utilityInfo.currencyUnit,
+        value: quantize(1.5 * bundleUnitPrice, 2)
+      };
+      console.log("RETURNING USER GENED BUNDLE BID");
+      console.log(bid);
+      return bid;
+    }else{//bundle for a pancake
+
+    }
+    let markupRatio = 2.0 + Math.random();
+    let bundleCost = -1.0 * utility; // Utility is -1 * bundle cost since price is interpreted as 0
+    bid.type = 'SellOffer';
+    bid.price = {
+      unit: utilityInfo.currencyUnit,
+      value: quantize(markupRatio * bundleCost, 2)
+    };
+  }
+  console.log("About to return from haggleBid with bid: ", 2);
+  console.log(bid, 2);
+  return bid;
+}
 function generateBid(offer) {
   console.log("In generateBid, offer is: ", 2);
   console.log(offer, 2);
@@ -671,15 +757,33 @@ function processMessage(message) {
         return messageResponse;
       }
       else if(addressee == agentName && interpretation.type == "Haggle"){ // The buyer is informing me that they want to haggle the price
-        let messageResponse = {
-          text: "Reply message is located here",
-          speaker: agentName,
-          role: "seller",
-          addressee: speaker,
-          environmentUUID: interpretation.metadata.environmentUUID,
-          timeStamp: new Date()
-        };
-        return messageResponse;
+        
+        if(mayIRespond(message_speaker_role, addressee)) { // I'm going to let myself respond, as dictated by mayIRespond()
+
+          if(!bidHistory[speaker]) bidHistory[speaker] = [];
+          bidHistory[speaker].push(interpretation);
+
+          let bid = generateHaggleBid(interpretation); // Generate bid based on message interpretation, utility, and the current state of negotiation with the buyer
+          console.log("Proposed bid is: ", 2);
+          console.log(bid, 2);
+
+          let bidResponse = {
+            text: translateBid(bid, false), // Translate the bid into English
+            speaker: agentName,
+            role: "seller",
+            addressee: speaker,
+            environmentUUID: interpretation.metadata.environmentUUID,
+            timeStamp: new Date()
+          };
+          bidResponse.bid = bid;
+
+          return bidResponse;
+        }
+        else { // Message was from a buyer, but I'm voluntarily opting not to respond, as dictated by mayIRespond()
+          console.log("I'm choosing not to do respond to this haggle request.", 2);
+          console.log(message, 2);
+          return Promise.resolve(null);
+        }
       }
       else if (addressee == agentName && interpretation.type == "Information") { // The buyer is just sending me an informational message. Reply politely without attempting to understand.
         console.log("This is an informational message.", 2);
